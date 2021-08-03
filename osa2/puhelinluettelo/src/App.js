@@ -37,7 +37,6 @@ const App = () => {
 
   const [fPersons,setFPersons]= useState(persons)
 
-  const nameList = persons.map(p => p.name.toLowerCase())
 
   
   
@@ -53,26 +52,36 @@ const App = () => {
     }
 
 
-    if (nameList.includes(newName.toLowerCase())===false){
+    const personExists = persons.find((p => p.name.toLowerCase() === newName.toLowerCase()))
 
-      personService
-      .create(NameObject)
-      .then(rn =>{setPersons(persons.concat(rn))})
-      setErrorMessage(
-        `Added ${newName} `
-      )
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000) 
+      if (personExists===undefined){
 
-      
-      
-      
-
-
-      
-
-
+        personService
+              .create(NameObject)
+              .then(returnedPerson => {
+                setPersons(persons.concat(returnedPerson))
+                setNewName('')
+                setNewNumber('')
+                setMessageColor(true)
+                setErrorMessage(
+                  `${newName} was successfully added`
+                )
+                setTimeout(() => {
+                  setErrorMessage(null)
+                }, 5000)
+              })
+              .catch(error => {
+                setMessageColor(false)
+                setErrorMessage(
+                  error.response.data.error
+                )
+                setTimeout(() => {
+                  setErrorMessage(null)
+                }, 5000)
+                
+                console.log(error.response.data)
+              })
+  
     }else{
 
     const confirmUpdate = window.confirm(`${newName} is already added to phonebook, replace the old number with a new one? `)
@@ -91,7 +100,6 @@ const App = () => {
 
       if (confirmUpdate){
 
-        const error_name= newName
 
         personService
         .update(id, tbUpdatedPersonInfo)
@@ -100,26 +108,29 @@ const App = () => {
             persons.map((person) =>
               person.id !== id ? person : returnedPerson)
           )
+          setMessageColor(true)
+          setErrorMessage(
+            `Updated ${newName} `
+          )
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000) 
+          
           setNewName('')
           setNewNumber('')
           setFilter('')
          
         })
         .catch(error => {
+         
           setMessageColor(false)
-          setErrorMessage(`Person '${error_name}' was already removed from server`)
-          setTimeout(() => {setMessageColor(true) && setErrorMessage(null)}, 5000)})
-
-        setErrorMessage(
-          `Updated ${newName} `
-        )
-        setTimeout(() => {
-          setErrorMessage(null)
-        }, 5000) 
-        
-        setNewName('')
-        setNewNumber('')
-        setFilter('')
+          setErrorMessage(error.response.data.error)
+          setTimeout(() => { setErrorMessage(null)}, 5000)
+  
+         
+        })
+          
+  
     
     }else{
   
@@ -163,7 +174,12 @@ const App = () => {
         .catch(error => {
           setMessageColor(false)
           setErrorMessage(`Person ${error_name} was already removed from server`)
-          setTimeout(() => {setMessageColor(true) && setErrorMessage(null)}, 5000)})
+          console.log(error.response.data)
+
+          
+          setTimeout(() => {setErrorMessage(null)}, 5000)
+          
+        })
           
            
 
